@@ -1,4 +1,5 @@
 import asyncio
+
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import (
@@ -8,403 +9,373 @@ from aiogram.types import (
     Message,
 )
 
-# توكن البوت الخاص بكِ من BotFather
-TOKEN="8513184138:AAGIfp6PhqrzVgdfjolmA06yjv-KCZitcNA"
+# ضعي التوكن الجديد هنا ولا تشاركيه مع أي شخص
+TOKEN = "8513184138:AAGHNmBGmCaovhi-FIEKcGYC4VcDmNu5Q3o"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 
-# --- 1. القائمة الرئيسية (عرض المستويات الثلاثة) ---
+# =========================
+# روابط مجلدات المواد
+# =========================
+
+SUBJECT_FOLDERS = {
+    # Semester 1
+    "s1_algebra": "https://drive.google.com/drive/folders/1KM2qHcBnCQbsFr1G7yx7LfHzCjJVkwME",
+    "s1_english": "https://drive.google.com/drive/folders/16vhUMgexGmYSgDLU2DB-eJmxuoErlk74",
+    "s1_drawing": "https://drive.google.com/drive/folders/1ptdNFv6FGed-5KImJUWXf2Cv2XEaSaHY",
+    "s1_physics": "https://drive.google.com/drive/folders/13lBf1afyUSUcCXfV2rvNag76u7XFhJPH",
+    "s1_chemistry": "https://drive.google.com/drive/folders/19Zd2CNa2BLr7RnL66aeK7O1MxuLpwzb-",
+    "s1_elective": "https://drive.google.com/drive/folders/1tPMf04amCWwelIsmlT4VgsEVn1EnbO60",
+    "s1_calculus": "https://drive.google.com/drive/folders/1LyI_tVXDHuAPijtGXUbA1ekX0E5qBSFg",
+
+    # Semester 2
+    "s2_biochem": "",
+    "s2_calc2": "",
+    "s2_mechanics": "",
+    "s2_geom": "",
+    "s2_comp": "",
+    "s2_eng2": "",
+    "s2_modern_phys": "",
+
+    # Semester 3
+    "s3_devices": "https://drive.google.com/drive/folders/1lkPWPcKRQGm0FFf7mg41FoUOCwnF2xpB",
+    "s3_prog": "https://drive.google.com/drive/folders/1i4gNKFs008w7SVL3CNTggt8HPOFpSDAl",
+    "s3_anat1": "https://drive.google.com/drive/folders/15UEHMJniZEYfX4WC5kr-shdtB28MUbI3",
+    "s3_mech_eng": "https://drive.google.com/drive/folders/1Z9YP1zBMO9DFXMUaOlISi17xtyGVeWQf",
+    "s3_matlab": "https://drive.google.com/drive/folders/13JB11yPSEHZ5EJILm0nEcnJc7NQfuuXZ",
+    "s3_sudan": "https://drive.google.com/drive/folders/1xk3AZ58nu5QrdUP8Wx1QZRaiEkrSftBn",
+    "s3_circuits1": "https://drive.google.com/drive/folders/1iAfZTvHww-Lg86sscmyD4cZCFmEe3gt3",
+    "s3_diff": "https://drive.google.com/drive/folders/1zPr96L2Nx-rIzT-Vf_6qeMh4v1ETv0eg",
+    "s3_materials": "https://drive.google.com/drive/folders/1vMI9Na30BdXO51nKFsw98huibk09WaZM",
+
+    # Semester 4
+    "s4_biomaterials": "https://drive.google.com/drive/folders/1CyI3lpW1RezmIV4RLfD3DRD1fEZrPi9o",
+    "s4_data_struct": "https://drive.google.com/drive/folders/1r-nig8PDPOyiLtMwR6gVHvZFcQUDxnvt",
+    "s4_circuits2": "https://drive.google.com/drive/folders/1iqLyQn-wOTfh0WfgBDxjsr_7-p9qIyry",
+    "s4_analog": "https://drive.google.com/drive/folders/1PEvrDtxoLfgU4KfA57GLI1eRTO9VQMzb",
+    "s4_applied_math": "https://drive.google.com/drive/folders/1V8JXFiWH4wST0YRQw0pISgQWeyDjfFhO",
+    "s4_complex": "https://drive.google.com/drive/folders/1aWCNSM3v3OWRYGbAgk8CtUfEuJm69gmk",
+    "s4_anat2": "",
+    "s4_med_phys": "https://drive.google.com/drive/folders/16-Z0oAl8ZK2gG1rin6b7QijyNIDv1G6Q",
+
+    # Semester 5
+    "s5_signals": "https://drive.google.com/drive/folders/1Cqo4mwalrHXx_EvC9BGVo-q5L5E9ioG2",
+    "s5_analog": "https://drive.google.com/drive/folders/1PEvrDtxoLfgU4KfA57GLI1eRTO9VQMzb",
+    "s5_biomech": "https://drive.google.com/drive/folders/15PJ2nND87CpnyZeDqHfd6eENwPHqs5Rp",
+    "s5_med_phys": "",
+    "s5_digital": "",
+    "s5_em": "",
+    "s5_numerical": "",
+}
+
+
+# =========================
+# روابط امتحانات السمسترات
+# =========================
+
+SEMESTER_EXAM_FOLDERS = {
+    "1": "https://drive.google.com/drive/folders/1E7r5KoRZtOrs2mU51CpaTGCMib40IeOZ",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+}
+
+
+# =========================
+# المواد حسب السمستر
+# =========================
+
+SUBJECTS_BY_SEMESTER = {
+    "1": [
+        ("🔬 General Physics (الفيزياء العامة)", "s1_physics"),
+        ("📐 Calculus I (الحسبان 1)", "s1_calculus"),
+        ("🧪 General Chemistry (الكيمياء العامة)", "s1_chemistry"),
+        ("📖 English I (اللغة الإنجليزية)", "s1_english"),
+        ("📐 Engineering Drawing (الرسم الهندسي)", "s1_drawing"),
+        ("📊 Linear Algebra (الجبر الخطي)", "s1_algebra"),
+        ("📚 مهارات العرض والتواصل", "s1_elective"),
+    ],
+
+    "2": [
+        ("🧬 Biochemistry (كيمياء حيوية)", "s2_biochem"),
+        ("📐 Calculus II (حسبان 2)", "s2_calc2"),
+        ("⚙️ Mechanics (ميكانيكا)", "s2_mechanics"),
+        ("📉 Analytical Geometry (هندسة تحليلية)", "s2_geom"),
+        ("💻 Computer Fundamentals (أساسيات الحاسوب)", "s2_comp"),
+        ("📖 English II (لغة إنجليزية 2)", "s2_eng2"),
+        ("⚛️ Modern Physics (فيزياء حديثة)", "s2_modern_phys"),
+    ],
+
+    "3": [
+        ("📈 Differential Equations (معادلات تفاضلية)", "s3_diff"),
+        ("⚙️ Mech Engineering Fundamentals (أساسيات الهندسة الميكانيكية)", "s3_mech_eng"),
+        ("⚡ Electrical Circuits I (الدوائر الكهربائية 1)", "s3_circuits1"),
+        ("🔌 Electronic Devices (النبائط الإلكترونية)", "s3_devices"),
+        ("🧠 Anatomy & Physiology I (تشريح ووظائف الأعضاء 1)", "s3_anat1"),
+        ("💻 Computer Programming (برمجة الحاسوب)", "s3_prog"),
+        ("🇸🇩 Sudanese Studies (دراسات سودانية)", "s3_sudan"),
+        ("🖥️ MATLAB (ماتلاب)", "s3_matlab"),
+        ("🧱 Materials Science (علم المواد)", "s3_materials"),
+    ],
+
+    "4": [
+        ("🧠 Anatomy & Physiology II (التشريح ووظائف الأعضاء 2)", "s4_anat2"),
+        ("🗂️ Data Structures (بنية البيانات)", "s4_data_struct"),
+        ("🩺 Medical Physics (فيزياء طبية)", "s4_med_phys"),
+        ("📐 Complex Variables (دوال مركبة)", "s4_complex"),
+        ("📊 Applied Mathematics (رياضيات تطبيقية)", "s4_applied_math"),
+        ("⚡ Electrical Circuits II (دوائر كهربائية 2)", "s4_circuits2"),
+        ("🎛️ Analog Electronics (الالكترونيات التماثلية)", "s4_analog"),
+        ("🦴 Biomaterials (مواد حيوية)", "s4_biomaterials"),
+    ],
+
+    "5": [
+        ("🩺 Medical Physics (فيزياء طبية)", "s5_med_phys"),
+        ("🎛️ Analog Electronics (الالكترونيات التماثلية)", "s5_analog"),
+        ("📡 Signals & Systems (اشارات ونظم)", "s5_signals"),
+        ("💻 Digital Electronics (إلكترونيات رقمية)", "s5_digital"),
+        ("🦾 Biomechanics (ميكانيكا حيوية)", "s5_biomech"),
+        ("⚡ Electromagnetic Theory (النظرية الكهرومغناطيسية)", "s5_em"),
+        ("🔢 Numerical Analysis (تحليل عددي)", "s5_numerical"),
+    ],
+}
+
+
+SEMESTER_INFO = {
+    "1": {"level": "1", "title": "السمستر الأول"},
+    "2": {"level": "1", "title": "السمستر الثاني"},
+    "3": {"level": "2", "title": "السمستر الثالث"},
+    "4": {"level": "2", "title": "السمستر الرابع"},
+    "5": {"level": "3", "title": "السمستر الخامس"},
+}
+
+
+# =========================
+# لوحات الأزرار
+# =========================
+
+def main_menu_keyboard():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="🎓 المستوى الأول (Level 1)",
+            callback_data="level_1_menu"
+        )],
+        [InlineKeyboardButton(
+            text="🎓 المستوى الثاني (Level 2)",
+            callback_data="level_2_menu"
+        )],
+        [InlineKeyboardButton(
+            text="🎓 المستوى الثالث (Level 3)",
+            callback_data="level_3_menu"
+        )],
+    ])
+
+
+def level_keyboard(level):
+    semesters = {
+        "1": [
+            ("📚 السمستر الأول (Semester 1)", "sem_1"),
+            ("📚 السمستر الثاني (Semester 2)", "sem_2"),
+        ],
+        "2": [
+            ("📚 السمستر الثالث (Semester 3)", "sem_3"),
+            ("📚 السمستر الرابع (Semester 4)", "sem_4"),
+        ],
+        "3": [
+            ("📚 السمستر الخامس (Semester 5)", "sem_5"),
+        ],
+    }
+
+    rows = [
+        [InlineKeyboardButton(text=label, callback_data=data)]
+        for label, data in semesters[level]
+    ]
+
+    rows.append([
+        InlineKeyboardButton(
+            text="⬅️ رجوع للمستويات",
+            callback_data="go_home"
+        )
+    ])
+
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def semester_keyboard(semester):
+    rows = [
+        [InlineKeyboardButton(
+            text=name,
+            callback_data=f"subject:{code}"
+        )]
+        for name, code in SUBJECTS_BY_SEMESTER[semester]
+    ]
+
+    # امتحانات السمستر مجمعة لكل المواد
+    rows.append([
+        InlineKeyboardButton(
+            text="📝 امتحانات السمستر لكل المواد",
+            callback_data=f"semester_exams:{semester}",
+        )
+    ])
+
+    level = SEMESTER_INFO[semester]["level"]
+
+    rows.append([
+        InlineKeyboardButton(
+            text="⬅️ رجوع للمستوى",
+            callback_data=f"level_{level}_menu"
+        ),
+        InlineKeyboardButton(
+            text="🏠 الرئيسية",
+            callback_data="go_home"
+        ),
+    ])
+
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+# =========================
+# الأوامر والتنقل
+# =========================
+
 @dp.message(Command("start"))
 async def cmd_start(message: Message):
-  keyboard = InlineKeyboardMarkup(
-      inline_keyboard=[
-          [
-              InlineKeyboardButton(
-                  text="🎓 المستوى الأول (Level 1)",
-                  callback_data="level_1_menu",
-              )
-          ],
-          [
-              InlineKeyboardButton(
-                  text="🎓 المستوى الثاني (Level 2)",
-                  callback_data="level_2_menu",
-              )
-          ],
-          [
-              InlineKeyboardButton(
-                  text="🎓 المستوى الثالث (Level 3)",
-                  callback_data="level_3_menu",
-              )
-          ],
-      ]
-  )
-  await message.answer(
-      "أهلاً بكِ يا باش مهندسة في مكتبة الهندسة الطبية 🩺✨\nاختر المستوى"
-      " الدراسي:",
-      reply_markup=keyboard,
-  )
-
-
-# --- 2. قوائم المستويات والسمسترات ---
-
-
-# المستوى الأول (سمستر 1 و 2)
-@dp.callback_query(F.data == "level_1_menu")
-async def show_level_1(callback: CallbackQuery):
-  keyboard = InlineKeyboardMarkup(
-      inline_keyboard=[
-          [
-              InlineKeyboardButton(
-                  text="📚 السمستر الأول (Semester 1)",
-                  callback_data="sem_1",
-              )
-          ],
-          [
-              InlineKeyboardButton(
-                  text="📚 السمستر الثاني (Semester 2)",
-                  callback_data="sem_2",
-              )
-          ],
-          [
-              InlineKeyboardButton(
-                  text="⬅️ رجوع للمستويات", callback_data="go_home"
-              )
-          ],
-      ]
-  )
-  await callback.message.edit_text(
-      "🎓 **المستوى الأول**\nاختر السمستر المطلوب:",
-      reply_markup=keyboard,
-      parse_mode="Markdown",
-  )
-  await callback.answer()
-
-
-# المستوى الثاني (سمستر 3 و 4)
-@dp.callback_query(F.data == "level_2_menu")
-async def show_level_2(callback: CallbackQuery):
-  keyboard = InlineKeyboardMarkup(
-      inline_keyboard=[
-          [
-              InlineKeyboardButton(
-                  text="📚 السمستر الثالث (Semester 3)",
-                  callback_data="sem_3",
-              )
-          ],
-          [
-              InlineKeyboardButton(
-                  text="📚 السمستر الرابع (Semester 4)",
-                  callback_data="sem_4",
-              )
-          ],
-          [
-              InlineKeyboardButton(
-                  text="⬅️ رجوع للمستويات", callback_data="go_home"
-              )
-          ],
-      ]
-  )
-  await callback.message.edit_text(
-      "🎓 **المستوى الثاني**\nاختر السمستر المطلوب:",
-      reply_markup=keyboard,
-      parse_mode="Markdown",
-  )
-  await callback.answer()
-
-
-# المستوى الثالث (سمستر 5)
-@dp.callback_query(F.data == "level_3_menu")
-async def show_level_3(callback: CallbackQuery):
-  keyboard = InlineKeyboardMarkup(
-      inline_keyboard=[
-          [
-              InlineKeyboardButton(
-                  text="📚 السمستر الخامس (Semester 5)",
-                  callback_data="sem_5",
-              )
-          ],
-          [
-              InlineKeyboardButton(
-                  text="⬅️ رجوع للمستويات", callback_data="go_home"
-              )
-          ],
-      ]
-  )
-  await callback.message.edit_text(
-      "🎓 **المستوى الثالث**\nاختر السمستر المطلوب:",
-      reply_markup=keyboard,
-      parse_mode="Markdown",
-  )
-  await callback.answer()
-
-
-# --- 3. دالة موحدة لإنشاء أزرار المادة (درايف + يوتيوب + رجوع للسمستر + رئيسية) ---
-def get_material_keyboard(back_callback):
-  return InlineKeyboardMarkup(
-      inline_keyboard=[
-          [
-              InlineKeyboardButton(
-                  text="📂 مجلد الشيتات والمحاضرات (Google Drive)",
-                  url="https://drive.google.com/...",
-              )
-          ],
-          [
-              InlineKeyboardButton(
-                  text="🎥 فيديوهات الشرح (YouTube)",
-                  url="https://youtube.com/...",
-              )
-          ],
-          [
-              InlineKeyboardButton(
-                  text="⬅️ رجوع للسمستر", callback_data=back_callback
-              ),
-              InlineKeyboardButton(
-                  text="🏠 الرئيسية", callback_data="go_home"
-              ),
-          ],
-      ]
-  )
-
-
-# دالة موحدة لأزرار السمستر (تحتوي على زر الامتحانات لكل سمستر + رجوع للمستوى + رئيسية)
-def get_semester_menu_keyboard(subjects_list, exam_callback, level_menu):
-  keyboard = []
-  for sub_name, sub_code in subjects_list:
-    keyboard.append(
-        [
-            InlineKeyboardButton(
-                text=sub_name, callback_data=f"sub_{sub_code}"
-            )
-        ]
+    welcome_text = (
+        "مرحباً بك في مكتبة الهندسة الطبية 🩺✨\n\n"
+        "💻 **تم تصميم هذا البوت بواسطة: Ebtsam Murtada Fawzi**\n\n"
+        "اختاري المستوى الدراسي:"
     )
 
-  # زر الامتحانات الخاص بالسمستر
-  keyboard.append(
-      [
-          InlineKeyboardButton(
-              text="📝 امتحانات السمستر (Exams)", callback_data=exam_callback
-          )
-      ]
-  )
-  # أزرار الرجوع والرئيسية
-  keyboard.append([
-      InlineKeyboardButton(
-          text="⬅️ رجوع للمستوى", callback_data=level_menu
-      ),
-      InlineKeyboardButton(text="🏠 الرئيسية", callback_data="go_home"),
-  ])
-  return InlineKeyboardMarkup(inline_keyboard=keyboard)
+    await message.answer(
+        welcome_text,
+        reply_markup=main_menu_keyboard(),
+        parse_mode="Markdown"
+    )
 
 
-# --- 4. قوائم مواد السمسترات ---
-
-# أ) السمستر الأول
-SEM_1_SUBJECTS = [
-    ("🔬 General Physics (الفيزياء العامة)", "s1_physics"),
-    ("📐 Calculus I (التفاضل والتكامل 1)", "s1_calculus"),
-    ("🧪 General Chemistry (الكيمياء العامة)", "s1_chemistry"),
-    ("📖 English I (اللغة الإنجليزية 1)", "s1_english"),
-    ("📐 Engineering Drawing (الرسم الهندسي)", "s1_drawing"),
-    ("📊 Linear Algebra (الجبر الخطي)", "s1_algebra"),
-    ("📚 Elective Course (المادة الاختيارية)", "s1_elective"),
-]
-
-
-@dp.callback_query(F.data == "sem_1")
-async def show_sem_1(callback: CallbackQuery):
-  await callback.message.edit_text(
-      "📚 **السمستر الأول (Semester 1)**\nاختر المادة أو الامتحانات المطلوبة:",
-      reply_markup=get_semester_menu_keyboard(
-          SEM_1_SUBJECTS, "exams_sem_1", "level_1_menu"
-      ),
-      parse_mode="Markdown",
-  )
-  await callback.answer()
-
-
-# ب) السمستر الثاني
-SEM_2_SUBJECTS = [
-    ("🧬 Biochemistry (كيمياء حيوية)", "s2_biochem"),
-    ("📐 Calculus II (حسبان 2)", "s2_calc2"),
-    ("⚙️ Mechanics (ميكانيكا)", "s2_mechanics"),
-    ("📉 Analytical Geometry (هندسة تحليلية)", "s2_geom"),
-    ("💻 Computer Fundamentals (أساسيات الحاسوب)", "s2_comp"),
-    ("📖 English II (لغة إنجليزية 2)", "s2_eng2"),
-    ("⚛️ Modern Physics (فيزياء حديثة)", "s2_modern_phys"),
-]
-
-
-@dp.callback_query(F.data == "sem_2")
-async def show_sem_2(callback: CallbackQuery):
-  await callback.message.edit_text(
-      "📚 **السمستر الثاني (Semester 2)**\nاختر المادة أو الامتحانات المطلوبة:",
-      reply_markup=get_semester_menu_keyboard(
-          SEM_2_SUBJECTS, "exams_sem_2", "level_1_menu"
-      ),
-      parse_mode="Markdown",
-  )
-  await callback.answer()
-
-
-# جـ) السمستر الثالث
-SEM_3_SUBJECTS = [
-    ("📈 Differential Equations (معادلات تفاضلية)", "s3_diff"),
-    (
-        "⚙️ Mech Engineering Fundamentals (أساسيات الهندسة الميكانيكية)",
-        "s3_mech_eng",
-    ),
-    ("⚡ Electrical Circuits I (الدوائر الكهربائية 1)", "s3_circuits1"),
-    ("🔌 Electronic Devices (النبائط الإلكترونية)", "s3_devices"),
-    ("🧠 Anatomy & Physiology I (التشريح ووظائف الأعضاء 1)", "s3_anat1"),
-    ("💻 Computer Programming (برمجة الحاسوب)", "s3_prog"),
-    ("🇸🇩 Sudanese Studies (دراسات سودانية)", "s3_sudan"),
-    ("🖥️ MATLAB (ماتلاب)", "s3_matlab"),
-    ("🧱 Materials Science (علم المواد)", "s3_materials"),
-]
-
-
-@dp.callback_query(F.data == "sem_3")
-async def show_sem_3(callback: CallbackQuery):
-  await callback.message.edit_text(
-      "📚 **السمستر الثالث (Semester 3)**\nاختر المادة أو الامتحانات المطلوبة:",
-      reply_markup=get_semester_menu_keyboard(
-          SEM_3_SUBJECTS, "exams_sem_3", "level_2_menu"
-      ),
-      parse_mode="Markdown",
-  )
-  await callback.answer()
-
-
-# د) السمستر الرابع
-SEM_4_SUBJECTS = [
-    ("🧠 Anatomy & Physiology II (التشريح ووظائف الأعضاء 2)", "s4_anat2"),
-    ("🗂️ Data Structures (بنية البيانات)", "s4_data_struct"),
-    ("🩺 Medical Physics (فيزياء طبية)", "s4_med_phys"),
-    ("📐 Complex Variables (دوال مركبة)", "s4_complex"),
-    ("📊 Applied Mathematics (رياضيات تطبيقية)", "s4_applied_math"),
-    ("⚡ Electrical Circuits II (دوائر كهربائية 2)", "s4_circuits2"),
-    ("🎛️ Analog Electronics (إلكترونيات تماثلية)", "s4_analog"),
-    ("🦴 Biomaterials (مواد حيوية)", "s4_biomaterials"),
-]
-
-
-@dp.callback_query(F.data == "sem_4")
-async def show_sem_4(callback: CallbackQuery):
-  await callback.message.edit_text(
-      "📚 **السمستر الرابع (Semester 4)**\nاختر المادة أو الامتحانات المطلوبة:",
-      reply_markup=get_semester_menu_keyboard(
-          SEM_4_SUBJECTS, "exams_sem_4", "level_2_menu"
-      ),
-      parse_mode="Markdown",
-  )
-  await callback.answer()
-
-
-# هـ) السمستر الخامس
-SEM_5_SUBJECTS = [
-    ("🩺 Medical Physics (فيزياء طبية)", "s5_med_phys"),
-    ("🎛️ Analog Electronics (إلكترونيات تماثلية)", "s5_analog"),
-    ("📡 Signals & Systems (إشارات ونظم)", "s5_signals"),
-    ("💻 Digital Electronics (إلكترونيات رقمية)", "s5_digital"),
-    ("🦾 Biomechanics (ميكانيكا حيوية)", "s5_biomech"),
-    ("⚡ Electromagnetic Theory (النظرية الكهرومغناطيسية)", "s5_em"),
-    ("🔢 Numerical Analysis (تحليل عددي)", "s5_numerical"),
-]
-
-
-@dp.callback_query(F.data == "sem_5")
-async def show_sem_5(callback: CallbackQuery):
-  await callback.message.edit_text(
-      "📚 **السمستر الخامس (Semester 5)**\nاختر المادة أو الامتحانات المطلوبة:",
-      reply_markup=get_semester_menu_keyboard(
-          SEM_5_SUBJECTS, "exams_sem_5", "level_3_menu"
-      ),
-      parse_mode="Markdown",
-  )
-  await callback.answer()
-
-
-# --- 5. التعامل مع ضغطات المواد (عرض الدرايف واليوتيوب) ---
-# مثال لمادة من السمستر الثاني (الكيمياء الحيوية) وبقية المواد بتسير بنفس النمط
-@dp.callback_query(F.data == "sub_s2_biochem")
-async def sub_s2_biochem(callback: CallbackQuery):
-  await callback.message.edit_text(
-      "🧬 **Biochemistry (كيمياء حيوية)**\nاختر ما تحتاجه للمادة:",
-      reply_markup=get_material_keyboard("sem_2"),
-      parse_mode="Markdown",
-  )
-  await callback.answer()
-
-
-# --- 6. أزرار امتحانات السمسترات ---
-@dp.callback_query(F.data.startswith("exams_sem_"))
-async def show_semester_exams(callback: CallbackQuery):
-  sem_num = callback.data.split("_")[-1]
-  keyboard = InlineKeyboardMarkup(
-      inline_keyboard=[
-          [
-              InlineKeyboardButton(
-                  text="📂 مجلد الامتحانات السابقة (Google Drive)",
-                  url="https://drive.google.com/...",
-              )
-          ],
-          [
-              InlineKeyboardButton(
-                  text="⬅️ رجوع للسمستر", callback_data=f"sem_{sem_num}"
-              ),
-              InlineKeyboardButton(
-                  text="🏠 الرئيسية", callback_data="go_home"
-              ),
-          ],
-      ]
-  )
-  await callback.message.edit_text(
-      f"📝 **امتحانات السمستر {sem_num}**\nاضغط للانتقال لمجلد الامتحانات:",
-      reply_markup=keyboard,
-      parse_mode="Markdown",
-  )
-  await callback.answer()
-
-
-# --- 7. زر الرجوع للقائمة الرئيسية (المستويات) ---
 @dp.callback_query(F.data == "go_home")
 async def go_home(callback: CallbackQuery):
-  keyboard = InlineKeyboardMarkup(
-      inline_keyboard=[
-          [
-              InlineKeyboardButton(
-                  text="🎓 المستوى الأول (Level 1)",
-                  callback_data="level_1_menu",
-              )
-          ],
-          [
-              InlineKeyboardButton(
-                  text="🎓 المستوى الثاني (Level 2)",
-                  callback_data="level_2_menu",
-              )
-          ],
-          [
-              InlineKeyboardButton(
-                  text="🎓 المستوى الثالث (Level 3)",
-                  callback_data="level_3_menu",
-              )
-          ],
-      ]
-  )
-  await callback.message.edit_text(
-      "أهلاً بكِ مجدداً في القائمة الرئيسية 🩺✨\nاختر المستوى الدراسي:",
-      reply_markup=keyboard,
-  )
-  await callback.answer()
+    welcome_text = (
+        "أهلاً بك مجددًا في مكتبة الهندسة الطبية 🩺✨\n\n"
+        "💻 **تم تصميم هذا البوت بواسطة: Ebtsam Murtada Fawzi**\n\n"
+        "اختاري المستوى الدراسي:"
+    )
+
+    await callback.message.edit_text(
+        welcome_text,
+        reply_markup=main_menu_keyboard(),
+        parse_mode="Markdown"
+    )
+
+    await callback.answer()
 
 
-# --- تشغيل البوت ---
+@dp.callback_query(
+    F.data.in_({"level_1_menu", "level_2_menu", "level_3_menu"})
+)
+async def show_level(callback: CallbackQuery):
+    level = callback.data.split("_")[1]
+
+    await callback.message.edit_text(
+        f"🎓 المستوى {level}\nاختاري السمستر المطلوب:",
+        reply_markup=level_keyboard(level),
+    )
+
+    await callback.answer()
+
+
+@dp.callback_query(F.data.startswith("sem_"))
+async def show_semester(callback: CallbackQuery):
+    semester = callback.data.split("_")[1]
+
+    if semester not in SUBJECTS_BY_SEMESTER:
+        await callback.answer(
+            "السمستر غير موجود.",
+            show_alert=True
+        )
+        return
+
+    await callback.message.edit_text(
+        f"📚 {SEMESTER_INFO[semester]['title']}\n"
+        "اختاري المادة لفتح مجلدها، أو افتحي امتحانات السمستر لكل المواد:",
+        reply_markup=semester_keyboard(semester),
+    )
+
+    await callback.answer()
+
+
+@dp.callback_query(F.data.startswith("subject:"))
+async def open_subject_folder(callback: CallbackQuery):
+    subject_code = callback.data.split(":", 1)[1]
+    url = SUBJECT_FOLDERS.get(subject_code, "").strip()
+
+    # إذا لم تتم إضافة الرابط بعد
+    if not url:
+        await callback.answer(
+            "رابط مجلد هذه المادة لم يُضف بعد.",
+            show_alert=True,
+        )
+        return
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="📂 فتح مجلد المادة في Google Drive",
+            url=url
+        )],
+    ])
+
+    await callback.message.answer(
+        "اضغطي لفتح مجلد المادة في Google Drive.",
+        reply_markup=keyboard,
+    )
+
+    await callback.answer()
+
+
+@dp.callback_query(F.data.startswith("semester_exams:"))
+async def open_semester_exams(callback: CallbackQuery):
+    semester = callback.data.split(":", 1)[1]
+    url = SEMESTER_EXAM_FOLDERS.get(semester, "").strip()
+
+    # إذا لم تتم إضافة الرابط بعد
+    if not url:
+        await callback.answer(
+            "رابط مجلد امتحانات هذا السمستر لم يُضف بعد.",
+            show_alert=True,
+        )
+        return
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="📝 فتح امتحانات السمستر في Google Drive",
+            url=url
+        )],
+    ])
+
+    await callback.message.answer(
+        f"📝 امتحانات {SEMESTER_INFO[semester]['title']} — جميع المواد",
+        reply_markup=keyboard,
+    )
+
+    await callback.answer()
+
+
+# =========================
+# تشغيل البوت
+# =========================
+
 async def main():
-  await bot.delete_webhook(drop_pending_updates=True)
-  await dp.start_polling(bot)
+    await bot.delete_webhook(drop_pending_updates=True)
+
+    try:
+        await dp.start_polling(bot)
+    finally:
+        # إغلاق جلسة البوت بشكل مرتب عند إيقاف البرنامج
+        await bot.session.close()
 
 
 if __name__ == "__main__":
-  asyncio.run(main())
+    asyncio.run(main())
