@@ -1,3 +1,5 @@
+
+
 import asyncio
 
 from aiogram import Bot, Dispatcher, F
@@ -9,7 +11,7 @@ from aiogram.types import (
     Message,
 )
 
-# ضعي التوكن الجديد هنا ولا تشاركيه مع أي شخص
+# ضعي التوكن الجديد هنا
 TOKEN = "8513184138:AAGHNmBGmCaovhi-FIEKcGYC4VcDmNu5Q3o"
 
 bot = Bot(token=TOKEN)
@@ -204,16 +206,32 @@ def level_keyboard(level):
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-def semester_keyboard(semester):
-    rows = [
-        [InlineKeyboardButton(
-            text=name,
-            callback_data=f"subject:{code}"
-        )]
-        for name, code in SUBJECTS_BY_SEMESTER[semester]
-    ]
+# =========================
+# قائمة السمستر
+# =========================
 
-    # امتحانات السمستر مجمعة لكل المواد
+def semester_keyboard(semester):
+    rows = []
+
+    for name, code in SUBJECTS_BY_SEMESTER[semester]:
+        url = SUBJECT_FOLDERS.get(code, "").strip()
+
+        if url:
+            # اسم المادة نفسه يفتح Google Drive مباشرة
+            button = InlineKeyboardButton(
+                text=name,
+                url=url
+            )
+        else:
+            # المواد التي لم تتم إضافة روابطها بعد
+            button = InlineKeyboardButton(
+                text=name,
+                callback_data=f"subject:{code}"
+            )
+
+        rows.append([button])
+
+    # امتحانات السمستر لكل المواد
     rows.append([
         InlineKeyboardButton(
             text="📝 امتحانات السمستر لكل المواد",
@@ -300,19 +318,23 @@ async def show_semester(callback: CallbackQuery):
 
     await callback.message.edit_text(
         f"📚 {SEMESTER_INFO[semester]['title']}\n"
-        "اختاري المادة لفتح مجلدها، أو افتحي امتحانات السمستر لكل المواد:",
+        "اختاري المادة لفتح مجلدها مباشرة في Google Drive:",
         reply_markup=semester_keyboard(semester),
     )
 
     await callback.answer()
 
 
+# =========================
+# تنبيه المواد التي بلا روابط
+# =========================
+
 @dp.callback_query(F.data.startswith("subject:"))
-async def open_subject_folder(callback: CallbackQuery):
+async def subject_without_link(callback: CallbackQuery):
     subject_code = callback.data.split(":", 1)[1]
+
     url = SUBJECT_FOLDERS.get(subject_code, "").strip()
 
-    # إذا لم تتم إضافة الرابط بعد
     if not url:
         await callback.answer(
             "رابط مجلد هذه المادة لم يُضف بعد.",
@@ -320,27 +342,19 @@ async def open_subject_folder(callback: CallbackQuery):
         )
         return
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text="📂 فتح مجلد المادة في Google Drive",
-            url=url
-        )],
-    ])
-
-    await callback.message.answer(
-        "اضغطي لفتح مجلد المادة في Google Drive.",
-        reply_markup=keyboard,
-    )
-
     await callback.answer()
 
+
+# =========================
+# امتحانات السمستر
+# =========================
 
 @dp.callback_query(F.data.startswith("semester_exams:"))
 async def open_semester_exams(callback: CallbackQuery):
     semester = callback.data.split(":", 1)[1]
+
     url = SEMESTER_EXAM_FOLDERS.get(semester, "").strip()
 
-    # إذا لم تتم إضافة الرابط بعد
     if not url:
         await callback.answer(
             "رابط مجلد امتحانات هذا السمستر لم يُضف بعد.",
@@ -373,7 +387,6 @@ async def main():
     try:
         await dp.start_polling(bot)
     finally:
-        # إغلاق جلسة البوت بشكل مرتب عند إيقاف البرنامج
         await bot.session.close()
 
 
