@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 # التوكن من متغير بيئة (لا تكتبيه في الكود)
 TOKEN = os.getenv("BOT_TOKEN")
 if not TOKEN:
-    raise RuntimeError("ضعي التوكن في متغير البيئة BOT_TOKEN")
+    raise RuntimeError("8513184138:AAGHNmBGmCaovhi-FIEKcGYC4VcDmNu5Q3o")
 
 bot = Bot(
     token=TOKEN,
