@@ -1,8 +1,11 @@
-
-
 import asyncio
+import logging
+import os
 
 from aiogram import Bot, Dispatcher, F
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command
 from aiogram.types import (
     CallbackQuery,
@@ -11,10 +14,17 @@ from aiogram.types import (
     Message,
 )
 
-# ضعي التوكن الجديد هنا
-TOKEN = "8513184138:AAGHNmBGmCaovhi-FIEKcGYC4VcDmNu5Q3o"
+logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=TOKEN)
+# التوكن من متغير بيئة (لا تكتبيه في الكود)
+TOKEN = os.getenv("BOT_TOKEN")
+if not TOKEN:
+    raise RuntimeError("ضعي التوكن في متغير البيئة BOT_TOKEN")
+
+bot = Bot(
+    token=TOKEN,
+    default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+)
 dp = Dispatcher()
 
 
@@ -163,15 +173,15 @@ def main_menu_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
             text="🎓 المستوى الأول (Level 1)",
-            callback_data="level_1_menu"
+            callback_data="level_1_menu",
         )],
         [InlineKeyboardButton(
             text="🎓 المستوى الثاني (Level 2)",
-            callback_data="level_2_menu"
+            callback_data="level_2_menu",
         )],
         [InlineKeyboardButton(
             text="🎓 المستوى الثالث (Level 3)",
-            callback_data="level_3_menu"
+            callback_data="level_3_menu",
         )],
     ])
 
@@ -199,16 +209,12 @@ def level_keyboard(level):
     rows.append([
         InlineKeyboardButton(
             text="⬅️ رجوع للمستويات",
-            callback_data="go_home"
+            callback_data="go_home",
         )
     ])
 
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
-
-# =========================
-# قائمة السمستر
-# =========================
 
 def semester_keyboard(semester):
     rows = []
@@ -218,20 +224,16 @@ def semester_keyboard(semester):
 
         if url:
             # اسم المادة نفسه يفتح Google Drive مباشرة
-            button = InlineKeyboardButton(
-                text=name,
-                url=url
-            )
+            button = InlineKeyboardButton(text=name, url=url)
         else:
             # المواد التي لم تتم إضافة روابطها بعد
             button = InlineKeyboardButton(
                 text=name,
-                callback_data=f"subject:{code}"
+                callback_data=f"subject:{code}",
             )
 
         rows.append([button])
 
-    # امتحانات السمستر لكل المواد
     rows.append([
         InlineKeyboardButton(
             text="📝 امتحانات السمستر لكل المواد",
@@ -244,15 +246,35 @@ def semester_keyboard(semester):
     rows.append([
         InlineKeyboardButton(
             text="⬅️ رجوع للمستوى",
-            callback_data=f"level_{level}_menu"
+            callback_data=f"level_{level}_menu",
         ),
         InlineKeyboardButton(
             text="🏠 الرئيسية",
-            callback_data="go_home"
+            callback_data="go_home",
         ),
     ])
 
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+# =========================
+# أدوات مساعدة
+# =========================
+
+WELCOME = (
+    "مرحباً بك في مكتبة الهندسة الطبية 🩺✨\n\n"
+    "💻 <b>تم تصميم هذا البوت بواسطة: Ebtsam Murtada Fawzi</b>\n\n"
+    "اختاري المستوى الدراسي:"
+)
+
+
+async def safe_edit(callback: CallbackQuery, text: str, markup):
+    """تعديل الرسالة بدون انهيار لو ما تغيرت."""
+    try:
+        await callback.message.edit_text(text, reply_markup=markup)
+    except TelegramBadRequest as e:
+        if "message is not modified" not in str(e):
+            raise
 
 
 # =========================
@@ -261,88 +283,49 @@ def semester_keyboard(semester):
 
 @dp.message(Command("start"))
 async def cmd_start(message: Message):
-    welcome_text = (
-        "مرحباً بك في مكتبة الهندسة الطبية 🩺✨\n\n"
-        "💻 **تم تصميم هذا البوت بواسطة: Ebtsam Murtada Fawzi**\n\n"
-        "اختاري المستوى الدراسي:"
-    )
-
-    await message.answer(
-        welcome_text,
-        reply_markup=main_menu_keyboard(),
-        parse_mode="Markdown"
-    )
+    await message.answer(WELCOME, reply_markup=main_menu_keyboard())
 
 
 @dp.callback_query(F.data == "go_home")
 async def go_home(callback: CallbackQuery):
-    welcome_text = (
-        "أهلاً بك مجددًا في مكتبة الهندسة الطبية 🩺✨\n\n"
-        "💻 **تم تصميم هذا البوت بواسطة: Ebtsam Murtada Fawzi**\n\n"
-        "اختاري المستوى الدراسي:"
-    )
-
-    await callback.message.edit_text(
-        welcome_text,
-        reply_markup=main_menu_keyboard(),
-        parse_mode="Markdown"
-    )
-
+    await safe_edit(callback, WELCOME, main_menu_keyboard())
     await callback.answer()
 
 
-@dp.callback_query(
-    F.data.in_({"level_1_menu", "level_2_menu", "level_3_menu"})
-)
-async def show_level(callback: CallbackQuery):
-    level = callback.data.split("_")[1]
-
-    await callback.message.edit_text(
+@dp.callback_query(F.data.regexp(r"^level_([123])_menu$").as_("m"))
+async def show_level(callback: CallbackQuery, m):
+    level = m.group(1)
+    await safe_edit(
+        callback,
         f"🎓 المستوى {level}\nاختاري السمستر المطلوب:",
-        reply_markup=level_keyboard(level),
+        level_keyboard(level),
     )
-
     await callback.answer()
 
 
-@dp.callback_query(F.data.startswith("sem_"))
-async def show_semester(callback: CallbackQuery):
-    semester = callback.data.split("_")[1]
-
-    if semester not in SUBJECTS_BY_SEMESTER:
-        await callback.answer(
-            "السمستر غير موجود.",
-            show_alert=True
-        )
-        return
-
-    await callback.message.edit_text(
+@dp.callback_query(F.data.regexp(r"^sem_([1-5])$").as_("m"))
+async def show_semester(callback: CallbackQuery, m):
+    semester = m.group(1)
+    await safe_edit(
+        callback,
         f"📚 {SEMESTER_INFO[semester]['title']}\n"
         "اختاري المادة لفتح مجلدها مباشرة في Google Drive:",
-        reply_markup=semester_keyboard(semester),
+        semester_keyboard(semester),
     )
-
     await callback.answer()
 
 
 # =========================
-# تنبيه المواد التي بلا روابط
+# المواد التي بلا روابط
 # =========================
 
 @dp.callback_query(F.data.startswith("subject:"))
 async def subject_without_link(callback: CallbackQuery):
-    subject_code = callback.data.split(":", 1)[1]
-
-    url = SUBJECT_FOLDERS.get(subject_code, "").strip()
-
-    if not url:
-        await callback.answer(
-            "رابط مجلد هذه المادة لم يُضف بعد.",
-            show_alert=True,
-        )
-        return
-
-    await callback.answer()
+    # لا يصل هنا إلا من الأزرار التي بلا رابط
+    await callback.answer(
+        "رابط مجلد هذه المادة لم يُضف بعد.",
+        show_alert=True,
+    )
 
 
 # =========================
@@ -352,6 +335,10 @@ async def subject_without_link(callback: CallbackQuery):
 @dp.callback_query(F.data.startswith("semester_exams:"))
 async def open_semester_exams(callback: CallbackQuery):
     semester = callback.data.split(":", 1)[1]
+
+    if semester not in SEMESTER_INFO:
+        await callback.answer("السمستر غير موجود.", show_alert=True)
+        return
 
     url = SEMESTER_EXAM_FOLDERS.get(semester, "").strip()
 
@@ -365,7 +352,7 @@ async def open_semester_exams(callback: CallbackQuery):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
             text="📝 فتح امتحانات السمستر في Google Drive",
-            url=url
+            url=url,
         )],
     ])
 
@@ -373,7 +360,6 @@ async def open_semester_exams(callback: CallbackQuery):
         f"📝 امتحانات {SEMESTER_INFO[semester]['title']} — جميع المواد",
         reply_markup=keyboard,
     )
-
     await callback.answer()
 
 
@@ -383,7 +369,6 @@ async def open_semester_exams(callback: CallbackQuery):
 
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
-
     try:
         await dp.start_polling(bot)
     finally:
@@ -392,3 +377,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+    
